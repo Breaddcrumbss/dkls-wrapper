@@ -4,8 +4,6 @@ src/main/jniLibs
 src/main/kotlin/uniffi
 src/main/resources
 
-bin/
-
 # Kotlin Gradle plugin caches/data
 .kotlin/
 
