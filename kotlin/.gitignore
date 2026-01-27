@@ -32,3 +32,5 @@ gradle-app.setting
 
 # Ignore generated bin folder
 bin/
+
+.idea/
