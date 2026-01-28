@@ -1,6 +1,12 @@
 package app
 
 import uniffi.dkls.*
+import io.github.davidepianca98.MQTTClient
+import io.github.davidepianca98.mqtt.MQTTVersion.MQTT5
+import app.MQTTInterface
+import io.github.davidepianca98.mqtt.MQTTVersion
+import kotlinx.coroutines.runBlocking
+
 
 object Native {
     fun loadOrThrow() {
@@ -27,4 +33,40 @@ fun main() {
     println("UniFFI bindings are on the classpath: ${Keyshare::class.qualifiedName}")
 
     println("Smoke test OK.")
+
+    testing()
+}
+
+fun testing() = runBlocking {
+    // Testing network interface
+    var networkInterface: MQTTInterface? = null
+
+    @OptIn(ExperimentalUnsignedTypes::class)  // for using .toUByteArray
+    val client = MQTTClient(
+        mqttVersion = MQTTVersion.MQTT5,
+        address = "test.mosquitto.org",
+        port = 1883,
+        tls = null,
+        publishReceived = {
+                publish -> networkInterface?.handleMessage(publish)
+        }
+    )
+
+    networkInterface = MQTTInterface(client, "test/topic/aisfghai")
+    client.runSuspend()
+
+    val tester = NetworkInterfaceTester(networkInterface)
+
+    try {
+        println("Starting relay test...")
+        val testData = "Test message".encodeToByteArray()
+
+        tester.testRelay(testData)
+
+        println("Test Passed!")
+    } catch (e: Exception) {
+        println("Test Failed: ${e.message}")
+    } finally {
+        tester.close()
+    }
 }
